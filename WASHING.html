@@ -154,9 +154,12 @@
                         startTime: startTime,
                         machineType: machineType,
                         machineNumber: machineNumber
+                    }).then(() => {
+                        alert("Booking successful!");
+                        displayBookings(); // Display the bookings after successful booking
+                    }).catch((error) => {
+                        alert("Error booking slot: " + error.message);
                     });
-                    alert("Booking successful!");
-                    displayBookings();
                 }
             });
         }
@@ -166,7 +169,7 @@
             db.ref("bookings").once("value", (snapshot) => {
                 let bookings = snapshot.val();
                 let table = document.getElementById('bookingList');
-                table.innerHTML = '';
+                table.innerHTML = ''; // Clear previous data
 
                 for (let key in bookings) {
                     let booking = bookings[key];
@@ -243,7 +246,6 @@
         // Initialize machine numbers and load bookings from Firebase
         updateMachineNumbers();
         displayBookings();
-
     </script>
 </body>
 </html>
