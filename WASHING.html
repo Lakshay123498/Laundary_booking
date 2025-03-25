@@ -1,6 +1,7 @@
-<!DOCTYPE html>
 <html>
 <head>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js"></script>
     <title>Laundry Booking System</title>
     <style>
         body { font-family: Arial, sans-serif; text-align: center; }
@@ -146,7 +147,7 @@
             let table = document.getElementById('bookingList');
             table.innerHTML = '';
             bookings.forEach(b => {
-                let row = `<tr><td>${b.name}</td><td>${b.date}</td><td>${b.startTime}</td><td>${b.endTime}</td><td>${b.machineType}</td><td>${b.machineNumber}</td><td>${b.status}</td><td><button class="delete-btn" onclick="deleteBooking(${bookings.indexOf(b)})">Delete</button></td></tr>`;
+                let row = <tr><td>${b.name}</td><td>${b.date}</td><td>${b.startTime}</td><td>${b.endTime}</td><td>${b.machineType}</td><td>${b.machineNumber}</td><td>${b.status}</td><td><button class="delete-btn" onclick="deleteBooking(${bookings.indexOf(b)})">Delete</button></td></tr>;
                 table.innerHTML += row;
             });
         }
@@ -171,7 +172,7 @@
             let table = document.getElementById('adminBookingList');
             table.innerHTML = '';
             bookings.forEach((b, index) => {
-                let row = `<tr><td>${b.name}</td><td>${b.date}</td><td>${b.startTime}</td><td>${b.endTime}</td><td>${b.machineType}</td><td>${b.machineNumber}</td><td><button class="delete-btn" onclick="deleteBooking(${index})">Delete</button></td></tr>`;
+                let row = <tr><td>${b.name}</td><td>${b.date}</td><td>${b.startTime}</td><td>${b.endTime}</td><td>${b.machineType}</td><td>${b.machineNumber}</td><td><button class="delete-btn" onclick="deleteBooking(${index})">Delete</button></td></tr>;
                 table.innerHTML += row;
             });
         }
@@ -226,6 +227,37 @@
         // Initialize machine numbers and load bookings from localStorage
         updateMachineNumbers();
         updateTable();
-    </script>
+    function bookSlot() {
+        let name = prompt("Enter your name:");
+        let date = document.getElementById('date').value;
+        let startTime = document.getElementById('startTime').value;
+        let machineType = document.getElementById('machineType').value;
+        let machineNumber = document.getElementById('machineNumber').value;
+
+        if (!name || !date || !startTime || !machineType || !machineNumber) {
+            alert("All fields are required!");
+            return;
+        }
+
+        let bookingKey = ${date}_${startTime}_${machineType}_${machineNumber};
+
+        db.ref("bookings/" + bookingKey).once("value", (snapshot) => {
+            if (snapshot.exists()) {
+                alert("Slot already booked!");
+            } else {
+                db.ref("bookings/" + bookingKey).set({
+                    name: name,
+                    date: date,
+                    startTime: startTime,
+                    machineType: machineType,
+                    machineNumber: machineNumber
+                });
+                alert("Booking successful!");
+                displayBookings();
+            }
+        });
+    }
+</script>
+
 </body>
 </html>
