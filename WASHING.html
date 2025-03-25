@@ -101,20 +101,25 @@
         function updateMachineNumbers() {
             let machineType = document.getElementById('machineType').value;
             let machineNumberSelect = document.getElementById('machineNumber');
-            machineNumberSelect.innerHTML = '';
-            let machineCount = (machineType === 'Washer') ? 4 : 3;
+            machineNumberSelect.innerHTML = '';  // Clear previous options
+            let machineCount = (machineType === 'Washer') ? 4 : 3;  // Set machine count based on type
+
+            // Populate machine numbers dropdown
             for (let i = 1; i <= machineCount; i++) {
                 let option = document.createElement('option');
                 option.value = i;
-                option.textContent = i;
+                option.textContent = `Machine ${i}`;
                 machineNumberSelect.appendChild(option);
             }
 
             // Update start time options based on machine type
             let startTimeSelect = document.getElementById('startTime');
-            startTimeSelect.innerHTML = '';
+            startTimeSelect.innerHTML = '';  // Clear previous options
+
             let slots = (machineType === 'Washer') ? ['00:00', '01:30', '03:00', '04:30', '06:00', '07:30', '09:00', '10:30', '12:00', '13:30', '15:00', '16:30', '18:00', '19:30', '21:00', '22:30'] :
                             ['00:00', '01:00', '02:00', '03:00', '04:00', '05:00', '06:00', '07:00', '08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00', '21:00', '22:00'];
+
+            // Populate start time dropdown
             slots.forEach(slot => {
                 let option = document.createElement('option');
                 option.value = slot;
