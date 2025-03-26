@@ -108,53 +108,52 @@
         }
 
         // Book a slot
-        function bookSlot() {
-            let name = prompt("Enter your name:");
-            let date = document.getElementById('date').value;
-            let startTime = document.getElementById('startTime').value;
-            let machineType = document.getElementById('machineType').value;
-            let machineNumber = document.getElementById('machineNumber').value;
-            
-            // Calculate end time
-            let startHour = parseInt(startTime.split(':')[0]);
-            let duration = (machineType === 'Washer') ? 1.5 : 1;
-            let endHour = startHour + duration;
-            let endTime = (endHour < 10 ? '0' : '') + Math.floor(endHour) + ":00";
-            
-            let existingBooking = bookings.find(b => b.date === date && 
-                ((b.startTime >= startTime && b.startTime < endTime) ||
-                 (b.endTime > startTime && b.endTime <= endTime)) &&
-                b.machineType === machineType && b.machineNumber === machineNumber);
-                
-            if (existingBooking) {
-                alert('This slot is already booked!');
-                return;
-            }
+       async function bookSlot() {
+    let name = prompt("Enter your name:");
+    let date = document.getElementById('date').value;
+    let startTime = document.getElementById('startTime').value;
+    let machineType = document.getElementById('machineType').value;
+    let machineNumber = document.getElementById('machineNumber').value;
 
-            let booking = { name, date, startTime, endTime, machineType, machineNumber, status: 'Booked' };
-            bookings.push(booking);
+    // Calculate End Time
+    let duration = (machineType === 'Washer') ? 1.5 : 1;
+    let endTime = new Date(`2000-01-01T${startTime}:00`);
+    endTime.setMinutes(endTime.getMinutes() + duration * 60);
+    endTime = endTime.toTimeString().split(" ")[0].slice(0, 5);
 
-            // Save bookings to localStorage with current timestamp
-            saveBookingsToStorage(bookings);
+    let bookingData = { name, date, startTime, endTime, machineType, machineNumber, status: "Booked" };
 
-            updateTable();
-            deleteOldBookings();
-        }
+    // Push data to Firebase
+    const bookingsRef = ref(db, 'bookings');
+    push(bookingsRef, bookingData)
+        .then(() => {
+            alert("Booking saved successfully!");
+            loadBookings();
+       function loadBookings() {
+    const bookingsRef = ref(db, 'bookings');
+    onValue(bookingsRef, (snapshot) => {
+        let table = document.getElementById('bookingList');
+        table.innerHTML = "";
 
-        // Display bookings in the table
-        function updateTable() {
-            let table = document.getElementById('bookingList');
-            table.innerHTML = '';
-            bookings.forEach(b => {
-                let row = `<tr><td>${b.name}</td><td>${b.date}</td><td>${b.startTime}</td><td>${b.endTime}</td><td>${b.machineType}</td><td>${b.machineNumber}</td><td>${b.status}</td><td><button class="delete-btn" onclick="deleteBooking(${bookings.indexOf(b)})">Delete</button></td></tr>`;
-                table.innerHTML += row;
-            });
-        }
+        snapshot.forEach((childSnapshot) => {
+            let booking = childSnapshot.val();
+            let bookingId = childSnapshot.key; // Unique ID for deletion
 
-        // Admin Panel: Show the panel for managing bookings
-        function showAdminPanel() {
-            document.getElementById('adminSection').style.display = 'block';
-        }
+            let row = `<tr>
+                <td>${booking.name}</td>
+                <td>${booking.date}</td>
+                <td>${booking.startTime}</td>
+                <td>${booking.endTime}</td>
+                <td>${booking.machineType}</td>
+                <td>${booking.machineNumber}</td>
+                <td>${booking.status}</td>
+                <td><button onclick="deleteBooking('${bookingId}')">Delete</button></td>
+            </tr>`;
+            table.innerHTML += row;
+        });
+    });
+}
+
 
         // Authenticate Admin
         function authenticateAdmin() {
@@ -177,35 +176,18 @@
         }
 
         // Delete a booking
-        function deleteBooking(index) {
-            bookings.splice(index, 1); // Remove booking from array
-            saveBookingsToStorage(bookings); // Save updated data
-            updateTable(); // Update the regular table
-            loadAdminBookings(); // Refresh admin panel table
-        }
+        fufunction deleteBooking(bookingId) {
+    const bookingRef = ref(db, `bookings/${bookingId}`);
+    remove(bookingRef)
+        .then(() => {
+            alert("Booking deleted!");
+            loadBookings();
+        })
+        .catch((error) => {
+            console.error("Error deleting booking:", error);
+        });
+}
 
-        // Save bookings to localStorage with timestamp
-        function saveBookingsToStorage(bookings) {
-            let currentTimestamp = new Date().getTime();
-            localStorage.setItem('bookings', JSON.stringify({ data: bookings, timestamp: currentTimestamp }));
-        }
-
-        // Get bookings from localStorage
-        function getBookingsFromStorage() {
-            let storedData = JSON.parse(localStorage.getItem('bookings'));
-            if (storedData && storedData.timestamp) {
-                let currentTimestamp = new Date().getTime();
-                let timeDifference = currentTimestamp - storedData.timestamp;
-
-                // Check if the data is older than 2 weeks (14 days = 14 * 24 * 60 * 60 * 1000 ms)
-                if (timeDifference > (14 * 24 * 60 * 60 * 1000)) {
-                    localStorage.removeItem('bookings'); // Remove data if older than 2 weeks
-                    return [];
-                }
-                return storedData.data; // Return the stored bookings if still valid
-            }
-            return []; // Return empty array if no valid data
-        }
 
         // Delete old bookings that are older than 2 weeks
         function deleteOldBookings() {
